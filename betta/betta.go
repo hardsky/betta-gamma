@@ -10,12 +10,13 @@ import "syscall"
 import "log"
 import "time"
 
-func NewBetta(clt gamma.GammaCollector) *Betta {
-	return &Betta{clt}
+func NewBetta(clt gamma.GammaCollector, store Storage) *Betta {
+	return &Betta{clt, store}
 }
 
 type Betta struct {
 	clt gamma.GammaCollector
+	st  Storage
 }
 
 func (p *Betta) Run() {
@@ -63,6 +64,11 @@ func (p *Betta) PostVote(c *gin.Context) {
 	if err := c.BindJSON(&newVote); err != nil {
 		return
 	}
+
+	go func(vote models.Vote) {
+		p.clt.Vote(vote)
+		p.st.Store(vote)
+	}(newVote)
 
 	c.IndentedJSON(http.StatusOK, models.NewResult("ok"))
 }
