@@ -3,11 +3,13 @@ package gamma
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/google/uuid"
-	"github.com/hardsky/gamma-beta/models"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/hardsky/gamma-beta/models"
+	"github.com/sirupsen/logrus"
 )
 
 func NewGamma() GammaCollector {
@@ -90,14 +92,32 @@ type HTTPGammaSender struct {
 }
 
 func (p *HTTPGammaSender) Send(statistic models.StatisticVoting) error {
+	log := logrus.WithFields(logrus.Fields{
+		"pkg":  "gamma",
+		"fnc":  "HTTPGammaSender.Send",
+		"stats": statistic,
+	})
 	client := &http.Client{
 		Timeout: 60 * time.Second,
 	}
 	reqBytes, err := json.Marshal(statistic)
 	req, err := http.NewRequest("POST", "http://service-gamma/voting-stats/", bytes.NewBuffer(reqBytes))
+	if err != nil {
+		log.WithField("err", err).Error("error on posting data to gamma")
+		return err
+	}
+	
 	req.Header.Add("Accept", "application/json")
 	res, err := client.Do(req)
+	if err != nil {
+		log.WithField("err", err).Error("error on posting data to gamma")
+		return err
+	}
 	_, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.WithField("err", err).Error("error on gamma response")
+		return err
+	}
 
 	return err
 }

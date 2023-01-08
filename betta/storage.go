@@ -1,7 +1,7 @@
 package betta
 
 import (
-	"log"
+	"github.com/sirupsen/logrus"
 
 	"context"
 	"os"
@@ -20,9 +20,14 @@ type PostgresStorage struct {
 }
 
 func (p *PostgresStorage) Store(vote models.Vote) error {
+	log := logrus.WithFields(logrus.Fields{
+		"pkg":  "betta",
+		"fnc":  "PostgresStorage.Store",
+		"vote": vote,
+	})
 	_, err := p.pool.Exec(context.Background(), "insert into votings(id, vote_id, option_id) values($1, $2, $3)", vote.VotingID, vote.VoteID, vote.OptionID)
 	if err != nil {
-		log.Printf("error on inserting vote, vote:%s, err:%s", vote, err)
+		log.WithField("err", err).Error("error on inserting vote")
 	}
 	return err
 }
@@ -32,8 +37,13 @@ func (p *PostgresStorage) Close() {
 }
 
 func NewPostgreStorage() (Storage, error) {
+	log := logrus.WithFields(logrus.Fields{
+		"pkg": "betta",
+		"fnc": "NewPostgreStorage",
+	})
 	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
+		log.WithField("err", err).Error("error on database initialization")
 		return nil, err
 	}
 	return &PostgresStorage{dbpool}, nil

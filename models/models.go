@@ -23,6 +23,7 @@ type StatisticOption struct {
 	Count    int       `json:"count"`
 }
 
+// Result represent betta response
 type Result struct {
 	Result string `json:"result"`
 }

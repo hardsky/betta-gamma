@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.8.2
 	github.com/google/uuid v1.3.0
 	github.com/jackc/pgx/v5 v5.2.0
+	github.com/sirupsen/logrus v1.9.0
 )
 
 require (
